@@ -19,11 +19,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+/*
+* Zanim zmapujemy punkty końcowe kontrolera 
+* należy dodać oprogramowanie pośredniczące CORS.
+*/
+builder.Services.AddCors();
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseCors(lambda => lambda.AllowAnyHeader().AllowAnyMethod()
+.WithOrigins("http://localhost:4200", "https://localhost:4200"));
 app.MapControllers();
 
 app.Run();
