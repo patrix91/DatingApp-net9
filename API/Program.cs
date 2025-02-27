@@ -1,22 +1,13 @@
-using System.Text;
-using API.Data;
-using API.Interfaces;
-using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using API.Extensions;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-builder.Services.AddDbContext<DataContext>(opt => {
-    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(opt => {
     var tokenKey = builder.Configuration["TokenKey"] ?? throw new Exception("Nie znaleziono TokenKey");
@@ -40,7 +31,7 @@ if (app.Environment.IsDevelopment())
 * Zanim zmapujemy punkty końcowe kontrolera 
 * należy dodać oprogramowanie pośredniczące CORS.
 */
-builder.Services.AddCors();
+
 
 app.UseHttpsRedirection();
 
