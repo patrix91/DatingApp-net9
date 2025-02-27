@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
+using API.Interfaces;
 using API.Entities;
 using System.Text;
 using API.Data;
@@ -8,10 +9,10 @@ using API.DTO;
 
 namespace API.Controllers;
 
-public class AccountController(DataContext dataContext) : BaseApiController
+public class AccountController(DataContext dataContext, ITokenService tokenService) : BaseApiController
 {
     [HttpPost("register")] // account/register
-    public async Task<ActionResult<AppUser>> Register(RegisterDto registerDto)
+    public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
         if(await UserExists(registerDto.Username)) return BadRequest("Uzytkownik o podaj nazwie już istnieje.");
 
@@ -24,7 +25,11 @@ public class AccountController(DataContext dataContext) : BaseApiController
 
         dataContext.Users.Add(user);
         await dataContext.SaveChangesAsync();
-        return user;
+
+        return new UserDto{
+            Username = user.UserName,
+            Token = tokenService.CreateToken(user)
+        };
     }
 
 
@@ -34,7 +39,7 @@ public class AccountController(DataContext dataContext) : BaseApiController
     }    
 
     [HttpPost("login")]
-    public async Task<ActionResult<AppUser>> Login(LoginDto loginDto)
+    public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
         var user = await dataContext.Users.FirstOrDefaultAsync(x => 
         x.UserName == loginDto.UserName.ToLower());
@@ -48,6 +53,10 @@ public class AccountController(DataContext dataContext) : BaseApiController
         {
             if  (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Niepoprawne hasło.");
         }
-        return user;
+
+        return new UserDto{
+            Username = user.UserName,
+            Token = tokenService.CreateToken(user)
+        };
     }
 }
